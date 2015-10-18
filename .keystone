@@ -1,0 +1,36 @@
+#!/bin/bash
+#------------------------------------------------------------------------------
+# Setup default keystone environment for the SDN controller
+# Create a tenant "sdn"
+# Create a user "sdn" with password "skyline"
+# Create a role "sdn-admin"
+# Create a role "sdn-user"
+# Associates the user "sdn" with the create roles in the tenant "sdn"
+#------------------------------------------------------------------------------
+ADMIN_TOKEN="ADMIN"
+IP="127.0.0.1"
+PORT="35357"
+TENANT="sdn"
+USER_NAME="sdn"
+PASSWORD="skyline"
+echo "Configure keystone server at $IP with admin token $ADMIN_TOKEN"
+# Create the tenant
+tenant_json="{\"tenant\":{\"name\":\"$TENANT\"}}"
+tenant=$(curl --header "X-AUTH-Token:$ADMIN_TOKEN" --header "Content-Type:application/json" -ksS --data-binary $tenant_json "http://$IP:$PORT/v2.0/tenants")
+tenant_id=$(echo $tenant | sed 's/.*"id": "\([0-9a-z]*\)".*/\1/')
+# Create the user
+user_json="{\"user\":{\"name\":\"$USER_NAME\",\"enabled\":true,\"password\":\"$PASSWORD\"}}"
+user=$(curl --header "X-AUTH-Token:$ADMIN_TOKEN" --header "Content-Type:application/json" -ksS --data-binary $user_json "http://$IP:$PORT/v2.0/users")
+user_id=$(echo $user | sed 's/.*"id": "\([0-9a-z]*\)".*/\1/')
+# Create the sdn-admin role
+admin_role_json="{\"role\":{\"name\":\"sdn-admin\"}}"
+admin_role=$(curl --header "X-AUTH-Token:$ADMIN_TOKEN" --header "Content-Type:application/json" -ksS --data-binary $admin_role_json "http://$IP:$PORT/v2.0/OS-KSADM/roles")
+admin_role_id=$(echo $admin_role | sed 's/.*"id": "\([0-9a-z]*\)".*/\1/')
+# Create the sdn-user role
+user_role_json="{\"role\":{\"name\":\"sdn-user\"}}"
+user_role=$(curl --header "X-AUTH-Token:$ADMIN_TOKEN" --header "Content-Type:application/json" -ksS --data-binary $user_role_json "http://$IP:$PORT/v2.0/OS-KSADM/roles")
+user_role_id=$(echo $user_role | sed 's/.*"id": "\([0-9a-z]*\)".*/\1/')
+# Associate user with admin role
+admin_role_assoc=$(curl --header "X-AUTH-Token:$ADMIN_TOKEN" -ksS -X PUT "http://$IP:$PORT/v2.0/tenants/$tenant_id/users/$user_id/roles/OS-KSADM/$admin_role_id")
+# Associate user with user role
+user_role_assoc=$(curl --header "X-AUTH-Token:$ADMIN_TOKEN" -ksS -X PUT "http://$IP:$PORT/v2.0/tenants/$tenant_id/users/$user_id/roles/OS-KSADM/$user_role_id")
