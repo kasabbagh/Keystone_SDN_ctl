@@ -34,3 +34,4 @@ user_role_id=$(echo $user_role | sed 's/.*"id": "\([0-9a-z]*\)".*/\1/')
 admin_role_assoc=$(curl --header "X-AUTH-Token:$ADMIN_TOKEN" -ksS -X PUT "http://$IP:$PORT/v2.0/tenants/$tenant_id/users/$user_id/roles/OS-KSADM/$admin_role_id")
 # Associate user with user role
 user_role_assoc=$(curl --header "X-AUTH-Token:$ADMIN_TOKEN" -ksS -X PUT "http://$IP:$PORT/v2.0/tenants/$tenant_id/users/$user_id/roles/OS-KSADM/$user_role_id")
+echo "Keystone configuration Complete"
